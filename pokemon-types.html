@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Types Pokémon – Forces & Faiblesses</title>
 
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6405895831744423"
-        crossorigin="anonymous"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,37 +13,31 @@
             padding: 20px;
             text-align: center;
         }
-        h1 { color: #e3350d; }
+        h1 { 
+            color: #e3350d;
+            margin-bottom: 10px;
+        }
         select {
             padding: 10px;
             font-size: 16px;
-            margin: 15px;
+            margin: 10px;
         }
         .result {
-            margin-top: 20px;
+            margin-top: 25px;
             padding: 20px;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
+            box-shadow: 0px 0px 10px #ccc;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
 <body>
 
     <h1>Types Pokémon : Forces & Faiblesses</h1>
-
-    <!-- ⭐ Bloc de publicité en haut -->
-    <ins class="adsbygoogle"
-        style="display:block; margin: 20px auto;"
-        data-ad-client="ca-pub-6405895831744423"
-        data-ad-slot="1234567890"
-        data-ad-format="auto"
-        data-full-width-responsive="true"></ins>
-    <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-
-    <h2>Choisis un type Pokémon :</h2>
+    <p>Sélectionne un type Pokémon pour voir les attaques super efficaces (x2) et hyper efficaces (x4).</p>
 
     <select id="typeSelector">
         <option value="">-- Sélectionne un type --</option>
@@ -75,40 +65,54 @@
 
     <script>
         const weaknesses = {
-            "Feu": { faible: ["Eau", "Sol", "Roche"], fort: ["Plante", "Glace", "Insecte", "Acier"] },
-            "Eau": { faible: ["Électrik", "Plante"], fort: ["Feu", "Sol", "Roche"] },
-            "Plante": { faible: ["Feu", "Glace", "Poison", "Vol", "Insecte"], fort: ["Eau", "Sol", "Roche"] },
-            "Électrik": { faible: ["Sol"], fort: ["Eau", "Vol"] },
-            "Glace": { faible: ["Feu", "Combat", "Roche", "Acier"], fort: ["Plante", "Sol", "Vol", "Dragon"] },
-            "Combat": { faible: ["Vol", "Psy", "Fée"], fort: ["Normal", "Glace", "Roche", "Ténèbres", "Acier"] },
-            "Psy": { faible: ["Insecte", "Spectre", "Ténèbres"], fort: ["Combat", "Poison"] },
-            "Roche": { faible: ["Eau", "Plante", "Combat", "Sol", "Acier"], fort: ["Feu", "Glace", "Vol", "Insecte"] },
-            "Sol": { faible: ["Eau", "Plante", "Glace"], fort: ["Feu", "Électrik", "Poison", "Roche", "Acier"] },
-            "Vol": { faible: ["Électrik", "Glace", "Roche"], fort: ["Plante", "Combat", "Insecte"] },
-            "Ténèbres": { faible: ["Combat", "Insecte", "Fée"], fort: ["Psy", "Spectre"] },
-            "Fée": { faible: ["Poison", "Acier"], fort: ["Combat", "Dragon", "Ténèbres"] },
-            "Poison": { faible: ["Sol", "Psy"], fort: ["Plante", "Fée"] },
-            "Insecte": { faible: ["Feu", "Vol", "Roche"], fort: ["Plante", "Psy", "Ténèbres"] },
-            "Acier": { faible: ["Feu", "Combat", "Sol"], fort: ["Glace", "Roche", "Fée"] },
-            "Normal": { faible: ["Combat"], fort: [] },
-            "Dragon": { faible: ["Glace", "Dragon", "Fée"], fort: ["Dragon"] },
-            "Spectre": { faible: ["Spectre", "Ténèbres"], fort: ["Psy", "Spectre"] }
+            "Feu": ["Eau", "Sol", "Roche"],
+            "Eau": ["Électrik", "Plante"],
+            "Plante": ["Feu", "Glace", "Poison", "Vol", "Insecte"],
+            "Électrik": ["Sol"],
+            "Glace": ["Feu", "Combat", "Roche", "Acier"],
+            "Combat": ["Vol", "Psy", "Fée"],
+            "Psy": ["Insecte", "Spectre", "Ténèbres"],
+            "Roche": ["Eau", "Plante", "Combat", "Sol", "Acier"],
+            "Sol": ["Eau", "Plante", "Glace"],
+            "Vol": ["Électrik", "Glace", "Roche"],
+            "Ténèbres": ["Combat", "Insecte", "Fée"],
+            "Fée": ["Poison", "Acier"],
+            "Poison": ["Sol", "Psy"],
+            "Insecte": ["Feu", "Vol", "Roche"],
+            "Acier": ["Feu", "Combat", "Sol"],
+            "Normal": ["Combat"],
+            "Dragon": ["Glace", "Dragon", "Fée"],
+            "Spectre": ["Spectre", "Ténèbres"]
         };
 
         document.getElementById("typeSelector").addEventListener("change", function () {
             const type = this.value;
             const resultDiv = document.getElementById("result");
-            
+
             if (!type) {
                 resultDiv.innerHTML = "";
                 return;
             }
 
-            const data = weaknesses[type];
+            let list = weaknesses[type];
+
+            let count = {};
+            list.forEach(w => {
+                count[w] = (count[w] || 0) + 1;
+            });
+
+            let superEff = [];
+            let hyperEff = [];
+
+            Object.keys(count).forEach(w => {
+                if (count[w] === 1) superEff.push(w);
+                if (count[w] >= 2) hyperEff.push(w);
+            });
+
             resultDiv.innerHTML = `
                 <h3>Type : ${type}</h3>
-                <p><strong>Faible contre :</strong> ${data.faible.join(", ")}</p>
-                <p><strong>Fort contre :</strong> ${data.fort.join(", ")}</p>
+                <p><strong>Super efficace (x2) :</strong> ${superEff.length ? superEff.join(", ") : "Aucun"}</p>
+                <p><strong>Hyper efficace (x4) :</strong> ${hyperEff.length ? hyperEff.join(", ") : "Aucun"}</p>
             `;
         });
     </script>
