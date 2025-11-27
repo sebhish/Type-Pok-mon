@@ -1,117 +1,153 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Types Pokémon – Forces & Faiblesses</title>
-
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6405895831744423"
-        crossorigin="anonymous"></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        h1 { color: #e3350d; }
-        select {
-            padding: 10px;
-            font-size: 16px;
-            margin: 15px;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Types Pokémon – Forces & Faiblesses</title>
+<style>
+    body { font-family: Arial, sans-serif; background:#f2f4f7; padding:20px; }
+    h1 { text-align:center; }
+    .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+    .types-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:10px; margin-top:20px;}
+    .type-btn {
+        padding:10px; border-radius:8px; border:1px solid #ccc; cursor:pointer;
+        text-align:center; font-weight:bold; background:white; transition:0.2s;
+    }
+    .type-btn.active { background:#d7edff; border-color:#7ac0ff; }
+    .section { margin-top:25px; }
+    .badge {
+        display:inline-block; padding:6px 10px; margin:3px;
+        border-radius:6px; font-size:13px; border:1px solid #ccc;
+    }
+    .good { background:#d5f5d5; border-color:#77d977; }
+    .bad { background:#ffe5b3; border-color:#ffcf70; }
+    .immune { background:#ffd6d6; border-color:#ff9b9b; }
+</style>
 </head>
 <body>
 
-    <h1>Types Pokémon : Forces & Faiblesses</h1>
+<div class="container">
+    <h1>⚡ Tableau d’efficacité des types Pokémon</h1>
+    <p>Sélectionne jusqu’à <b>2 types défenseurs</b> pour voir quelles attaques sont fortes ou faibles.</p>
 
-    <!-- ⭐ Bloc de publicité en haut -->
-    <ins class="adsbygoogle"
-        style="display:block; margin: 20px auto;"
-        data-ad-client="ca-pub-6405895831744423"
-        data-ad-slot="1234567890"
-        data-ad-format="auto"
-        data-full-width-responsive="true"></ins>
-    <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
+    <div id="types" class="types-grid"></div>
 
-    <h2>Choisis un type Pokémon :</h2>
+    <div class="section">
+        <h2>Résultats</h2>
+        <p id="selection">Aucun type sélectionné.</p>
 
-    <select id="typeSelector">
-        <option value="">-- Sélectionne un type --</option>
-        <option>Feu</option>
-        <option>Eau</option>
-        <option>Plante</option>
-        <option>Électrik</option>
-        <option>Glace</option>
-        <option>Combat</option>
-        <option>Psy</option>
-        <option>Roche</option>
-        <option>Sol</option>
-        <option>Vol</option>
-        <option>Ténèbres</option>
-        <option>Fée</option>
-        <option>Poison</option>
-        <option>Insecte</option>
-        <option>Acier</option>
-        <option>Normal</option>
-        <option>Dragon</option>
-        <option>Spectre</option>
-    </select>
+        <h3>Super efficace (x2 ou x4)</h3>
+        <div id="super" class="zone"></div>
 
-    <div id="result" class="result"></div>
+        <h3>Peu efficace (x0.5 ou x0.25)</h3>
+        <div id="weak" class="zone"></div>
 
-    <script>
-        const weaknesses = {
-            "Feu": { faible: ["Eau", "Sol", "Roche"], fort: ["Plante", "Glace", "Insecte", "Acier"] },
-            "Eau": { faible: ["Électrik", "Plante"], fort: ["Feu", "Sol", "Roche"] },
-            "Plante": { faible: ["Feu", "Glace", "Poison", "Vol", "Insecte"], fort: ["Eau", "Sol", "Roche"] },
-            "Électrik": { faible: ["Sol"], fort: ["Eau", "Vol"] },
-            "Glace": { faible: ["Feu", "Combat", "Roche", "Acier"], fort: ["Plante", "Sol", "Vol", "Dragon"] },
-            "Combat": { faible: ["Vol", "Psy", "Fée"], fort: ["Normal", "Glace", "Roche", "Ténèbres", "Acier"] },
-            "Psy": { faible: ["Insecte", "Spectre", "Ténèbres"], fort: ["Combat", "Poison"] },
-            "Roche": { faible: ["Eau", "Plante", "Combat", "Sol", "Acier"], fort: ["Feu", "Glace", "Vol", "Insecte"] },
-            "Sol": { faible: ["Eau", "Plante", "Glace"], fort: ["Feu", "Électrik", "Poison", "Roche", "Acier"] },
-            "Vol": { faible: ["Électrik", "Glace", "Roche"], fort: ["Plante", "Combat", "Insecte"] },
-            "Ténèbres": { faible: ["Combat", "Insecte", "Fée"], fort: ["Psy", "Spectre"] },
-            "Fée": { faible: ["Poison", "Acier"], fort: ["Combat", "Dragon", "Ténèbres"] },
-            "Poison": { faible: ["Sol", "Psy"], fort: ["Plante", "Fée"] },
-            "Insecte": { faible: ["Feu", "Vol", "Roche"], fort: ["Plante", "Psy", "Ténèbres"] },
-            "Acier": { faible: ["Feu", "Combat", "Sol"], fort: ["Glace", "Roche", "Fée"] },
-            "Normal": { faible: ["Combat"], fort: [] },
-            "Dragon": { faible: ["Glace", "Dragon", "Fée"], fort: ["Dragon"] },
-            "Spectre": { faible: ["Spectre", "Ténèbres"], fort: ["Psy", "Spectre"] }
+        <h3>Sans effet (x0)</h3>
+        <div id="immune" class="zone"></div>
+
+        <h3>Neutre (x1)</h3>
+        <div id="neutral" class="zone"></div>
+    </div>
+</div>
+
+<script>
+const TYPES = [
+    "Normal","Feu","Eau","Électrik","Plante","Glace","Combat","Poison",
+    "Sol","Vol","Psy","Insecte","Roche","Spectre","Dragon","Ténèbres","Acier","Fée"
+];
+
+// Table d’efficacité (FR)
+const E = {
+    Normal:{Roche:.5,Spectre:0,Acier:.5},
+    Feu:{Feu:.5,Eau:.5,Plante:2,Glace:2,Insecte:2,Roche:.5,Dragon:.5,Acier:2},
+    Eau:{Feu:2,Eau:.5,Plante:.5,Sol:2,Roche:2,Dragon:.5},
+    Électrik:{Eau:2,Électrik:.5,Plante:.5,Sol:0,Vol:2,Dragon:.5},
+    Plante:{Feu:.5,Eau:2,Plante:.5,Poison:.5,Sol:2,Vol:.5,Insecte:.5,Roche:2,Dragon:.5,Acier:.5},
+    Glace:{Feu:.5,Eau:.5,Plante:2,Sol:2,Vol:2,Dragon:2,Acier:.5},
+    Combat:{Normal:2,Glace:2,Roche:2,Ténèbres:2,Acier:2,Poison:.5,Vol:.5,Psy:.5,Insecte:.5,Spectre:0},
+    Poison:{Plante:2,Fée:2,Poison:.5,Sol:.5,Roche:.5,Spectre:.5,Acier:0},
+    Sol:{Feu:2,Électrik:2,Plante:.5,Poison:2,Vol:0,Insecte:.5,Roche:2,Acier:2},
+    Vol:{Électrik:.5,Plante:2,Combat:2,Insecte:2,Roche:.5,Acier:.5},
+    Psy:{Combat:2,Poison:2,Psy:.5,Ténèbres:0,Acier:.5},
+    Insecte:{Feu:.5,Plante:2,Combat:.5,Poison:.5,Vol:.5,Psy:2,Spectre:.5,Ténèbres:2,Acier:.5,Fée:.5},
+    Roche:{Feu:2,Glace:2,Combat:.5,Sol:.5,Vol:2,Insecte:2,Acier:.5},
+    Spectre:{Normal:0,Psy:2,Spectre:2,Ténèbres:.5},
+    Dragon:{Dragon:2,Acier:.5,Fée:0},
+    Ténèbres:{Combat:.5,Psy:2,Spectre:2,Ténèbres:.5,Fée:.5},
+    Acier:{Feu:.5,Eau:.5,Électrik:.5,Glace:2,Roche:2,Fée:2,Acier:.5},
+    Fée:{Feu:.5,Combat:2,Poison:.5,Dragon:2,Ténèbres:2,Acier:.5}
+};
+
+// Sélection (max 2)
+let defenders = [];
+
+function renderTypes() {
+    const container = document.getElementById("types");
+    container.innerHTML = "";
+    TYPES.forEach(t => {
+        const btn = document.createElement("button");
+        btn.className = "type-btn";
+        btn.textContent = t;
+
+        btn.onclick = () => {
+            if (defenders.includes(t)) {
+                defenders = defenders.filter(x => x !== t);
+            } else {
+                if (defenders.length === 2) defenders.shift();
+                defenders.push(t);
+            }
+            update();
         };
 
-        document.getElementById("typeSelector").addEventListener("change", function () {
-            const type = this.value;
-            const resultDiv = document.getElementById("result");
-            
-            if (!type) {
-                resultDiv.innerHTML = "";
-                return;
-            }
+        if (defenders.includes(t)) btn.classList.add("active");
 
-            const data = weaknesses[type];
-            resultDiv.innerHTML = `
-                <h3>Type : ${type}</h3>
-                <p><strong>Faible contre :</strong> ${data.faible.join(", ")}</p>
-                <p><strong>Fort contre :</strong> ${data.fort.join(", ")}</p>
-            `;
-        });
-    </script>
+        container.appendChild(btn);
+    });
+}
+
+function multiplier(att, def) {
+    return (E[att] && E[att][def]) ?? 1;
+}
+
+function update() {
+    renderTypes();
+
+    const sel = document.getElementById("selection");
+
+    if (defenders.length === 0) {
+        sel.textContent = "Aucun type sélectionné.";
+        document.querySelectorAll(".zone").forEach(z => z.innerHTML = "");
+        return;
+    }
+
+    sel.textContent = "Défenseur(s) : " + defenders.join(" / ");
+
+    const results = TYPES.map(att => {
+        let m = 1;
+        defenders.forEach(d => m *= multiplier(att, d));
+        return {att, m};
+    });
+
+    const superEff = results.filter(r => r.m >= 2);
+    const weak = results.filter(r => r.m < 1 && r.m > 0);
+    const immune = results.filter(r => r.m === 0);
+    const neutral = results.filter(r => r.m === 1);
+
+    fill("super", superEff, "good");
+    fill("weak", weak, "bad");
+    fill("immune", immune, "immune");
+    fill("neutral", neutral, "");
+}
+
+function fill(id, list, cls) {
+    const zone = document.getElementById(id);
+    zone.innerHTML = list.length
+        ? list.map(r => `<span class="badge ${cls}">${r.att} — x${r.m}</span>`).join("")
+        : "<i>Aucun</i>";
+}
+
+renderTypes();
+update();
+</script>
 
 </body>
 </html>
