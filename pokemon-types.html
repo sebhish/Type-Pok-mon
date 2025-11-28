@@ -14,22 +14,16 @@
             text-align: center;
             transition: 0.3s;
         }
-        h1 { color: #e3350d; }
 
-        /* --- MODE SOMBRE --- */
+        /* MODE SOMBRE */
         body.dark {
             background: #1c1c1c;
             color: #f4f4f4;
         }
-        body.dark .result {
-            background: #2a2a2a;
-            box-shadow: 0 0 10px #000;
-        }
-        body.dark h1 {
-            color: #ff6b6b;
-        }
 
-        /* Bouton mode sombre */
+        h1 { color: #e3350d; }
+        body.dark h1 { color: #ff6b6b; }
+
         #darkToggle {
             padding: 10px 20px;
             border: none;
@@ -38,19 +32,38 @@
             border-radius: 8px;
             cursor: pointer;
             margin-bottom: 20px;
+        }
+        #darkToggle:hover { background: #666; }
+
+        /* TABLEAU DES TYPES */
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            max-width: 500px;
+            margin: 10px auto;
+        }
+
+        .type-btn {
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            border: 2px solid transparent;
             transition: 0.2s;
         }
-        #darkToggle:hover {
-            background: #666;
+
+        .type-btn.selected {
+            border: 3px solid black;
+            transform: scale(1.05);
         }
 
-        select {
-            padding: 10px;
-            font-size: 16px;
-            margin: 10px;
-            border-radius: 6px;
+        body.dark .type-btn.selected {
+            border: 3px solid white;
         }
 
+        /* RESULTATS */
         .result {
             margin-top: 20px;
             padding: 20px;
@@ -60,7 +73,11 @@
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
-            transition: 0.3s;
+        }
+
+        body.dark .result {
+            background: #2a2a2a;
+            box-shadow: 0 0 10px #000;
         }
 
         .type-tag {
@@ -86,22 +103,18 @@
 
 <button id="darkToggle">🌙 Mode sombre</button>
 
-<p>Choisis jusqu’à <strong>2 types</strong> pour voir toutes les interactions colorées.</p>
+<h2>Sélectionne ton premier type</h2>
+<div id="typeGrid1" class="type-grid"></div>
 
-<select id="type1">
-    <option value="">-- Type principal --</option>
-</select>
-
-<select id="type2">
-    <option value="">-- Second type (optionnel) --</option>
-</select>
+<h2>Sélectionne ton second type (optionnel)</h2>
+<div id="typeGrid2" class="type-grid"></div>
 
 <div id="result" class="result"></div>
 
 <script>
 /* -----------------------------------------
    COULEURS DE CHAQUE TYPE
-   ----------------------------------------- */
+----------------------------------------- */
 const typeColors = {
     Normal: "#A8A77A",
     Feu: "#EE8130",
@@ -125,7 +138,7 @@ const typeColors = {
 
 /* -----------------------------------------
    TABLE DES MULTIPLICATEURS
-   ----------------------------------------- */
+----------------------------------------- */
 const chart = {
     Normal:     { Combat:2, Spectre:0 },
     Feu:        { Eau:2, Sol:2, Roche:2, Plante:0.5, Glace:0.5, Insecte:0.5, Acier:0.5 },
@@ -147,46 +160,68 @@ const chart = {
     Spectre:    { Spectre:2, Ténèbres:2, Poison:0.5, Insecte:0.5, Normal:0 }
 };
 
-/* -----------------------------------------
-   REMPLIR LES MENUS DÉROULANTS
-   ----------------------------------------- */
 const types = Object.keys(chart);
-let sel1 = document.getElementById("type1");
-let sel2 = document.getElementById("type2");
 
-types.forEach(t => {
-    sel1.innerHTML += `<option value="${t}">${t}</option>`;
-    sel2.innerHTML += `<option value="${t}">${t}</option>`;
-});
+let selected1 = null;
+let selected2 = null;
 
 /* -----------------------------------------
-   TAG COLORÉ
-   ----------------------------------------- */
+   CRÉATION DES TABLEAUX CLIQUABLES
+----------------------------------------- */
+function createGrid(id, isFirst) {
+    const grid = document.getElementById(id);
+
+    types.forEach(type => {
+        const btn = document.createElement("div");
+        btn.className = "type-btn";
+        btn.style.background = typeColors[type];
+        btn.innerText = type;
+
+        btn.onclick = () => {
+            if (isFirst) {
+                selected1 = type;
+                [...grid.children].forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+            } else {
+                selected2 = type;
+                [...grid.children].forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+            }
+            calculate();
+        };
+
+        grid.appendChild(btn);
+    });
+}
+
+createGrid("typeGrid1", true);
+createGrid("typeGrid2", false);
+
+/* -----------------------------------------
+   TAG COULEUR
+----------------------------------------- */
 function coloredTag(type) {
     return `<span class="type-tag" style="background:${typeColors[type]};">${type}</span>`;
 }
 
 /* -----------------------------------------
    CALCUL
-   ----------------------------------------- */
+----------------------------------------- */
 function calculate() {
-    let t1 = sel1.value;
-    let t2 = sel2.value;
-
-    if (!t1) {
+    if (!selected1) {
         document.getElementById("result").innerHTML = "";
         return;
     }
 
     let multipliers = {};
-    types.forEach(a => multipliers[a] = 1);
+    types.forEach(t => multipliers[t] = 1);
 
-    // Type 1
-    for (let atk in chart[t1]) multipliers[atk] *= chart[t1][atk];
+    for (let atk in chart[selected1])
+        multipliers[atk] *= chart[selected1][atk];
 
-    // Type 2 optionnel
-    if (t2) {
-        for (let atk in chart[t2]) multipliers[atk] *= chart[t2][atk];
+    if (selected2) {
+        for (let atk in chart[selected2])
+            multipliers[atk] *= chart[selected2][atk];
     }
 
     let x4=[], x2=[], x05=[], x0=[];
@@ -198,7 +233,7 @@ function calculate() {
     }
 
     document.getElementById("result").innerHTML = `
-        <h2>Résultat pour : ${coloredTag(t1)} ${t2 ? "+" + coloredTag(t2) : ""}</h2>
+        <h2>Résultat pour : ${coloredTag(selected1)} ${selected2 ? "+" + coloredTag(selected2) : ""}</h2>
 
         <div class="cat-title">🔥 Hyper efficace (x4)</div>
         ${x4.length ? x4.map(coloredTag).join("") : "Aucun"}
@@ -214,12 +249,9 @@ function calculate() {
     `;
 }
 
-sel1.onchange = calculate;
-sel2.onchange = calculate;
-
 /* -----------------------------------------
    MODE SOMBRE
-   ----------------------------------------- */
+----------------------------------------- */
 const btn = document.getElementById("darkToggle");
 
 function applyDarkMode(state) {
@@ -232,11 +264,9 @@ function applyDarkMode(state) {
     }
 }
 
-// Charger le mode sauvegardé
 let saved = localStorage.getItem("darkmode") === "true";
 applyDarkMode(saved);
 
-// Changer on/off
 btn.onclick = () => {
     saved = !saved;
     localStorage.setItem("darkmode", saved);
