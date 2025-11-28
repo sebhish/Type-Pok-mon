@@ -1,152 +1,247 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Types Pokémon – Forces & Faiblesses</title>
-<style>
-    body { font-family: Arial, sans-serif; background:#f2f4f7; padding:20px; }
-    h1 { text-align:center; }
-    .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-    .types-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:10px; margin-top:20px;}
-    .type-btn {
-        padding:10px; border-radius:8px; border:1px solid #ccc; cursor:pointer;
-        text-align:center; font-weight:bold; background:white; transition:0.2s;
-    }
-    .type-btn.active { background:#d7edff; border-color:#7ac0ff; }
-    .section { margin-top:25px; }
-    .badge {
-        display:inline-block; padding:6px 10px; margin:3px;
-        border-radius:6px; font-size:13px; border:1px solid #ccc;
-    }
-    .good { background:#d5f5d5; border-color:#77d977; }
-    .bad { background:#ffe5b3; border-color:#ffcf70; }
-    .immune { background:#ffd6d6; border-color:#ff9b9b; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Types Pokémon – Analyse complète</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2f3;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        h1 { color: #e3350d; }
+
+        /* --- MODE SOMBRE --- */
+        body.dark {
+            background: #1c1c1c;
+            color: #f4f4f4;
+        }
+        body.dark .result {
+            background: #2a2a2a;
+            box-shadow: 0 0 10px #000;
+        }
+        body.dark h1 {
+            color: #ff6b6b;
+        }
+
+        /* Bouton mode sombre */
+        #darkToggle {
+            padding: 10px 20px;
+            border: none;
+            background: #444;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: 0.2s;
+        }
+        #darkToggle:hover {
+            background: #666;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+            border-radius: 6px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: 0.3s;
+        }
+
+        .type-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            margin: 4px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .cat-title { 
+            font-weight: bold; 
+            margin-top: 20px; 
+            font-size: 18px;
+        }
+    </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h1>⚡ Tableau d’efficacité des types Pokémon</h1>
-    <p>Sélectionne jusqu’à <b>2 types défenseurs</b> pour voir quelles attaques sont fortes ou faibles.</p>
+<h1>Analyse des Types Pokémon</h1>
 
-    <div id="types" class="types-grid"></div>
+<button id="darkToggle">🌙 Mode sombre</button>
 
-    <div class="section">
-        <h2>Résultats</h2>
-        <p id="selection">Aucun type sélectionné.</p>
+<p>Choisis jusqu’à <strong>2 types</strong> pour voir toutes les interactions colorées.</p>
 
-        <h3>Super efficace (x2 ou x4)</h3>
-        <div id="super" class="zone"></div>
+<select id="type1">
+    <option value="">-- Type principal --</option>
+</select>
 
-        <h3>Peu efficace (x0.5 ou x0.25)</h3>
-        <div id="weak" class="zone"></div>
+<select id="type2">
+    <option value="">-- Second type (optionnel) --</option>
+</select>
 
-        <h3>Sans effet (x0)</h3>
-        <div id="immune" class="zone"></div>
-
-        <h3>Neutre (x1)</h3>
-        <div id="neutral" class="zone"></div>
-    </div>
-</div>
+<div id="result" class="result"></div>
 
 <script>
-const TYPES = [
-    "Normal","Feu","Eau","Électrik","Plante","Glace","Combat","Poison",
-    "Sol","Vol","Psy","Insecte","Roche","Spectre","Dragon","Ténèbres","Acier","Fée"
-];
-
-// Table d’efficacité (FR)
-const E = {
-    Normal:{Roche:.5,Spectre:0,Acier:.5},
-    Feu:{Feu:.5,Eau:.5,Plante:2,Glace:2,Insecte:2,Roche:.5,Dragon:.5,Acier:2},
-    Eau:{Feu:2,Eau:.5,Plante:.5,Sol:2,Roche:2,Dragon:.5},
-    Électrik:{Eau:2,Électrik:.5,Plante:.5,Sol:0,Vol:2,Dragon:.5},
-    Plante:{Feu:.5,Eau:2,Plante:.5,Poison:.5,Sol:2,Vol:.5,Insecte:.5,Roche:2,Dragon:.5,Acier:.5},
-    Glace:{Feu:.5,Eau:.5,Plante:2,Sol:2,Vol:2,Dragon:2,Acier:.5},
-    Combat:{Normal:2,Glace:2,Roche:2,Ténèbres:2,Acier:2,Poison:.5,Vol:.5,Psy:.5,Insecte:.5,Spectre:0},
-    Poison:{Plante:2,Fée:2,Poison:.5,Sol:.5,Roche:.5,Spectre:.5,Acier:0},
-    Sol:{Feu:2,Électrik:2,Plante:.5,Poison:2,Vol:0,Insecte:.5,Roche:2,Acier:2},
-    Vol:{Électrik:.5,Plante:2,Combat:2,Insecte:2,Roche:.5,Acier:.5},
-    Psy:{Combat:2,Poison:2,Psy:.5,Ténèbres:0,Acier:.5},
-    Insecte:{Feu:.5,Plante:2,Combat:.5,Poison:.5,Vol:.5,Psy:2,Spectre:.5,Ténèbres:2,Acier:.5,Fée:.5},
-    Roche:{Feu:2,Glace:2,Combat:.5,Sol:.5,Vol:2,Insecte:2,Acier:.5},
-    Spectre:{Normal:0,Psy:2,Spectre:2,Ténèbres:.5},
-    Dragon:{Dragon:2,Acier:.5,Fée:0},
-    Ténèbres:{Combat:.5,Psy:2,Spectre:2,Ténèbres:.5,Fée:.5},
-    Acier:{Feu:.5,Eau:.5,Électrik:.5,Glace:2,Roche:2,Fée:2,Acier:.5},
-    Fée:{Feu:.5,Combat:2,Poison:.5,Dragon:2,Ténèbres:2,Acier:.5}
+/* -----------------------------------------
+   COULEURS DE CHAQUE TYPE
+   ----------------------------------------- */
+const typeColors = {
+    Normal: "#A8A77A",
+    Feu: "#EE8130",
+    Eau: "#6390F0",
+    Plante: "#7AC74C",
+    Électrik: "#F7D02C",
+    Glace: "#96D9D6",
+    Combat: "#C22E28",
+    Poison: "#A33EA1",
+    Sol: "#E2BF65",
+    Vol: "#A98FF3",
+    Psy: "#F95587",
+    Insecte: "#A6B91A",
+    Roche: "#B6A136",
+    Spectre: "#735797",
+    Dragon: "#6F35FC",
+    Ténèbres: "#705746",
+    Acier: "#B7B7CE",
+    Fée: "#D685AD"
 };
 
-// Sélection (max 2)
-let defenders = [];
+/* -----------------------------------------
+   TABLE DES MULTIPLICATEURS
+   ----------------------------------------- */
+const chart = {
+    Normal:     { Combat:2, Spectre:0 },
+    Feu:        { Eau:2, Sol:2, Roche:2, Plante:0.5, Glace:0.5, Insecte:0.5, Acier:0.5 },
+    Eau:        { Électrik:2, Plante:2, Feu:0.5, Sol:0.5, Roche:0.5 },
+    Plante:     { Feu:2, Glace:2, Poison:2, Vol:2, Insecte:2, Eau:0.5, Sol:0.5, Roche:0.5 },
+    Électrik:   { Sol:2, Électrik:0.5, Vol:0.5, Acier:0.5 },
+    Glace:      { Feu:2, Combat:2, Roche:2, Acier:2, Glace:0.5 },
+    Combat:     { Vol:2, Psy:2, Fée:2, Insecte:0.5, Roche:0.5, Ténèbres:0.5 },
+    Psy:        { Insecte:2, Spectre:2, Ténèbres:2, Combat:0.5, Psy:0.5 },
+    Roche:      { Eau:2, Plante:2, Combat:2, Sol:2, Acier:2, Normal:0.5, Feu:0.5, Poison:0.5 },
+    Sol:        { Eau:2, Plante:2, Glace:2, Poison:0.5, Roche:0.5, Électrik:0 },
+    Vol:        { Électrik:2, Glace:2, Roche:2, Plante:0.5, Combat:0.5, Insecte:0.5, Sol:0 },
+    Ténèbres:   { Combat:2, Insecte:2, Fée:2, Ténèbres:0.5, Spectre:0.5 },
+    Fée:        { Poison:2, Acier:2, Combat:0.5, Insecte:0.5, Ténèbres:0.5 },
+    Poison:     { Sol:2, Psy:2, Plante:0.5, Combat:0.5, Poison:0.5, Fée:0.5 },
+    Insecte:    { Feu:2, Vol:2, Roche:2, Plante:0.5, Combat:0.5, Sol:0.5 },
+    Acier:      { Feu:2, Combat:2, Sol:2, Normal:0.5, Plante:0.5, Glace:0.5, Vol:0.5, Psy:0.5, Insecte:0.5, Roche:0.5, Dragon:0.5, Acier:0.5, Fée:0.5, Poison:0 },
+    Dragon:     { Glace:2, Dragon:2, Fée:2, Feu:0.5, Eau:0.5, Plante:0.5, Électrik:0.5 },
+    Spectre:    { Spectre:2, Ténèbres:2, Poison:0.5, Insecte:0.5, Normal:0 }
+};
 
-function renderTypes() {
-    const container = document.getElementById("types");
-    container.innerHTML = "";
-    TYPES.forEach(t => {
-        const btn = document.createElement("button");
-        btn.className = "type-btn";
-        btn.textContent = t;
+/* -----------------------------------------
+   REMPLIR LES MENUS DÉROULANTS
+   ----------------------------------------- */
+const types = Object.keys(chart);
+let sel1 = document.getElementById("type1");
+let sel2 = document.getElementById("type2");
 
-        btn.onclick = () => {
-            if (defenders.includes(t)) {
-                defenders = defenders.filter(x => x !== t);
-            } else {
-                if (defenders.length === 2) defenders.shift();
-                defenders.push(t);
-            }
-            update();
-        };
+types.forEach(t => {
+    sel1.innerHTML += `<option value="${t}">${t}</option>`;
+    sel2.innerHTML += `<option value="${t}">${t}</option>`;
+});
 
-        if (defenders.includes(t)) btn.classList.add("active");
-
-        container.appendChild(btn);
-    });
+/* -----------------------------------------
+   TAG COLORÉ
+   ----------------------------------------- */
+function coloredTag(type) {
+    return `<span class="type-tag" style="background:${typeColors[type]};">${type}</span>`;
 }
 
-function multiplier(att, def) {
-    return (E[att] && E[att][def]) ?? 1;
-}
+/* -----------------------------------------
+   CALCUL
+   ----------------------------------------- */
+function calculate() {
+    let t1 = sel1.value;
+    let t2 = sel2.value;
 
-function update() {
-    renderTypes();
-
-    const sel = document.getElementById("selection");
-
-    if (defenders.length === 0) {
-        sel.textContent = "Aucun type sélectionné.";
-        document.querySelectorAll(".zone").forEach(z => z.innerHTML = "");
+    if (!t1) {
+        document.getElementById("result").innerHTML = "";
         return;
     }
 
-    sel.textContent = "Défenseur(s) : " + defenders.join(" / ");
+    let multipliers = {};
+    types.forEach(a => multipliers[a] = 1);
 
-    const results = TYPES.map(att => {
-        let m = 1;
-        defenders.forEach(d => m *= multiplier(att, d));
-        return {att, m};
-    });
+    // Type 1
+    for (let atk in chart[t1]) multipliers[atk] *= chart[t1][atk];
 
-    const superEff = results.filter(r => r.m >= 2);
-    const weak = results.filter(r => r.m < 1 && r.m > 0);
-    const immune = results.filter(r => r.m === 0);
-    const neutral = results.filter(r => r.m === 1);
+    // Type 2 optionnel
+    if (t2) {
+        for (let atk in chart[t2]) multipliers[atk] *= chart[t2][atk];
+    }
 
-    fill("super", superEff, "good");
-    fill("weak", weak, "bad");
-    fill("immune", immune, "immune");
-    fill("neutral", neutral, "");
+    let x4=[], x2=[], x05=[], x0=[];
+    for (let atk in multipliers) {
+        if (multipliers[atk] === 4) x4.push(atk);
+        else if (multipliers[atk] === 2) x2.push(atk);
+        else if (multipliers[atk] === 0.5) x05.push(atk);
+        else if (multipliers[atk] === 0) x0.push(atk);
+    }
+
+    document.getElementById("result").innerHTML = `
+        <h2>Résultat pour : ${coloredTag(t1)} ${t2 ? "+" + coloredTag(t2) : ""}</h2>
+
+        <div class="cat-title">🔥 Hyper efficace (x4)</div>
+        ${x4.length ? x4.map(coloredTag).join("") : "Aucun"}
+
+        <div class="cat-title">⚔️ Super efficace (x2)</div>
+        ${x2.length ? x2.map(coloredTag).join("") : "Aucun"}
+
+        <div class="cat-title">🛡️ Résiste (x0.5)</div>
+        ${x05.length ? x05.map(coloredTag).join("") : "Aucun"}
+
+        <div class="cat-title">❌ Immunisé (x0)</div>
+        ${x0.length ? x0.map(coloredTag).join("") : "Aucun"}
+    `;
 }
 
-function fill(id, list, cls) {
-    const zone = document.getElementById(id);
-    zone.innerHTML = list.length
-        ? list.map(r => `<span class="badge ${cls}">${r.att} — x${r.m}</span>`).join("")
-        : "<i>Aucun</i>";
+sel1.onchange = calculate;
+sel2.onchange = calculate;
+
+/* -----------------------------------------
+   MODE SOMBRE
+   ----------------------------------------- */
+const btn = document.getElementById("darkToggle");
+
+function applyDarkMode(state) {
+    if (state) {
+        document.body.classList.add("dark");
+        btn.innerText = "☀️ Mode clair";
+    } else {
+        document.body.classList.remove("dark");
+        btn.innerText = "🌙 Mode sombre";
+    }
 }
 
-renderTypes();
-update();
+// Charger le mode sauvegardé
+let saved = localStorage.getItem("darkmode") === "true";
+applyDarkMode(saved);
+
+// Changer on/off
+btn.onclick = () => {
+    saved = !saved;
+    localStorage.setItem("darkmode", saved);
+    applyDarkMode(saved);
+};
 </script>
 
 </body>
