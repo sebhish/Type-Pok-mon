@@ -2,229 +2,151 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Types Pokémon – Analyse complète</title>
-
+<title>Types Pokémon – Forces & Faiblesses</title>
 <style>
-body{
-    font-family: Arial, sans-serif;
-    background:#eef2f3;
-    margin:0;
-    padding:20px;
-    text-align:center;
-    transition:.3s;
-}
-body.dark{
-    background:#1c1c1c;
-    color:#f4f4f4;
-}
-h1{color:#e3350d}
-body.dark h1{color:#ff6b6b}
-
-#darkToggle{
-    padding:10px 20px;
-    border:none;
-    background:#444;
-    color:white;
-    border-radius:8px;
-    cursor:pointer;
-    margin-bottom:20px;
-}
-#darkToggle:hover{background:#666}
-
-.type-grid{
-    display:grid;
-    grid-template-columns:repeat(6,1fr);
-    gap:8px;
-    max-width:520px;
-    margin:10px auto;
-}
-.type-btn{
-    padding:10px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
-    color:white;
-    border:3px solid transparent;
-    transition:.2s;
-}
-.type-btn.selected{
-    border-color:black;
-    transform:scale(1.05);
-}
-body.dark .type-btn.selected{
-    border-color:white;
-}
-
-.result{
-    margin-top:20px;
-    padding:20px;
-    background:white;
-    border-radius:10px;
-    box-shadow:0 0 10px #ccc;
-    max-width:600px;
-    margin-inline:auto;
-}
-body.dark .result{
-    background:#2a2a2a;
-    box-shadow:0 0 10px #000;
-}
-
-.type-tag{
-    display:inline-block;
-    padding:6px 12px;
-    border-radius:8px;
-    margin:4px;
-    font-weight:bold;
-    color:white;
-}
-
-.cat-title{
-    font-weight:bold;
-    margin-top:18px;
-    font-size:18px;
-}
+    body { font-family: Arial, sans-serif; background:#f2f4f7; padding:20px; }
+    h1 { text-align:center; }
+    .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+    .types-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:10px; margin-top:20px;}
+    .type-btn {
+        padding:10px; border-radius:8px; border:1px solid #ccc; cursor:pointer;
+        text-align:center; font-weight:bold; background:white; transition:0.2s;
+    }
+    .type-btn.active { background:#d7edff; border-color:#7ac0ff; }
+    .section { margin-top:25px; }
+    .badge {
+        display:inline-block; padding:6px 10px; margin:3px;
+        border-radius:6px; font-size:13px; border:1px solid #ccc;
+    }
+    .good { background:#d5f5d5; border-color:#77d977; }
+    .bad { background:#ffe5b3; border-color:#ffcf70; }
+    .immune { background:#ffd6d6; border-color:#ff9b9b; }
 </style>
 </head>
-
 <body>
 
-<h1>Analyse des Types Pokémon</h1>
-<button id="darkToggle">🌙 Mode sombre</button>
+<div class="container">
+    <h1>⚡ Tableau d’efficacité des types Pokémon</h1>
+    <p>Sélectionne jusqu’à <b>2 types défenseurs</b> pour voir quelles attaques sont fortes ou faibles.</p>
 
-<h2>Type 1 (clique pour sélectionner / désélectionner)</h2>
-<div id="grid1" class="type-grid"></div>
+    <div id="types" class="types-grid"></div>
 
-<h2>Type 2 (optionnel)</h2>
-<div id="grid2" class="type-grid"></div>
+    <div class="section">
+        <h2>Résultats</h2>
+        <p id="selection">Aucun type sélectionné.</p>
 
-<div id="result" class="result"></div>
+        <h3>Super efficace (x2 ou x4)</h3>
+        <div id="super" class="zone"></div>
+
+        <h3>Peu efficace (x0.5 ou x0.25)</h3>
+        <div id="weak" class="zone"></div>
+
+        <h3>Sans effet (x0)</h3>
+        <div id="immune" class="zone"></div>
+
+        <h3>Neutre (x1)</h3>
+        <div id="neutral" class="zone"></div>
+    </div>
+</div>
 
 <script>
-const typeColors={
-Normal:"#A8A77A",Feu:"#EE8130",Eau:"#6390F0",Plante:"#7AC74C",
-Électrik:"#F7D02C",Glace:"#96D9D6",Combat:"#C22E28",
-Poison:"#A33EA1",Sol:"#E2BF65",Vol:"#A98FF3",
-Psy:"#F95587",Insecte:"#A6B91A",Roche:"#B6A136",
-Spectre:"#735797",Dragon:"#6F35FC",Ténèbres:"#705746",
-Acier:"#B7B7CE",Fée:"#D685AD"
+const TYPES = [
+    "Normal","Feu","Eau","Électrik","Plante","Glace","Combat","Poison",
+    "Sol","Vol","Psy","Insecte","Roche","Spectre","Dragon","Ténèbres","Acier","Fée"
+];
+
+// Table d’efficacité (FR)
+const E = {
+    Normal:{Roche:.5,Spectre:0,Acier:.5},
+    Feu:{Feu:.5,Eau:.5,Plante:2,Glace:2,Insecte:2,Roche:.5,Dragon:.5,Acier:2},
+    Eau:{Feu:2,Eau:.5,Plante:.5,Sol:2,Roche:2,Dragon:.5},
+    Électrik:{Eau:2,Électrik:.5,Plante:.5,Sol:0,Vol:2,Dragon:.5},
+    Plante:{Feu:.5,Eau:2,Plante:.5,Poison:.5,Sol:2,Vol:.5,Insecte:.5,Roche:2,Dragon:.5,Acier:.5},
+    Glace:{Feu:.5,Eau:.5,Plante:2,Sol:2,Vol:2,Dragon:2,Acier:.5},
+    Combat:{Normal:2,Glace:2,Roche:2,Ténèbres:2,Acier:2,Poison:.5,Vol:.5,Psy:.5,Insecte:.5,Spectre:0},
+    Poison:{Plante:2,Fée:2,Poison:.5,Sol:.5,Roche:.5,Spectre:.5,Acier:0},
+    Sol:{Feu:2,Électrik:2,Plante:.5,Poison:2,Vol:0,Insecte:.5,Roche:2,Acier:2},
+    Vol:{Électrik:.5,Plante:2,Combat:2,Insecte:2,Roche:.5,Acier:.5},
+    Psy:{Combat:2,Poison:2,Psy:.5,Ténèbres:0,Acier:.5},
+    Insecte:{Feu:.5,Plante:2,Combat:.5,Poison:.5,Vol:.5,Psy:2,Spectre:.5,Ténèbres:2,Acier:.5,Fée:.5},
+    Roche:{Feu:2,Glace:2,Combat:.5,Sol:.5,Vol:2,Insecte:2,Acier:.5},
+    Spectre:{Normal:0,Psy:2,Spectre:2,Ténèbres:.5},
+    Dragon:{Dragon:2,Acier:.5,Fée:0},
+    Ténèbres:{Combat:.5,Psy:2,Spectre:2,Ténèbres:.5,Fée:.5},
+    Acier:{Feu:.5,Eau:.5,Électrik:.5,Glace:2,Roche:2,Fée:2,Acier:.5},
+    Fée:{Feu:.5,Combat:2,Poison:.5,Dragon:2,Ténèbres:2,Acier:.5}
 };
 
-const chart={
-Normal:{Combat:2,Spectre:0},
-Feu:{Eau:2,Sol:2,Roche:2,Plante:.5,Glace:.5,Insecte:.5,Acier:.5},
-Eau:{Électrik:2,Plante:2,Feu:.5,Sol:.5,Roche:.5},
-Plante:{Feu:2,Glace:2,Poison:2,Vol:2,Insecte:2,Eau:.5,Sol:.5,Roche:.5},
-Électrik:{Sol:2,Électrik:.5,Vol:.5,Acier:.5},
-Glace:{Feu:2,Combat:2,Roche:2,Acier:2,Glace:.5},
-Combat:{Vol:2,Psy:2,Fée:2,Insecte:.5,Roche:.5,Ténèbres:.5},
-Psy:{Insecte:2,Spectre:2,Ténèbres:2,Combat:.5,Psy:.5},
-Roche:{Eau:2,Plante:2,Combat:2,Sol:2,Acier:2,Normal:.5,Feu:.5,Poison:.5},
-Sol:{Eau:2,Plante:2,Glace:2,Poison:.5,Roche:.5,Électrik:0},
-Vol:{Électrik:2,Glace:2,Roche:2,Plante:.5,Combat:.5,Insecte:.5,Sol:0},
-Ténèbres:{Combat:2,Insecte:2,Fée:2,Ténèbres:.5,Spectre:.5},
-Fée:{Poison:2,Acier:2,Combat:.5,Insecte:.5,Ténèbres:.5},
-Poison:{Sol:2,Psy:2,Plante:.5,Combat:.5,Poison:.5,Fée:.5},
-Insecte:{Feu:2,Vol:2,Roche:2,Plante:.5,Combat:.5,Sol:.5},
-Acier:{Feu:2,Combat:2,Sol:2,Normal:.5,Plante:.5,Glace:.5,Vol:.5,Psy:.5,Insecte:.5,Roche:.5,Dragon:.5,Acier:.5,Fée:.5,Poison:0},
-Dragon:{Glace:2,Dragon:2,Fée:2,Feu:.5,Eau:.5,Plante:.5,Électrik:.5},
-Spectre:{Spectre:2,Ténèbres:2,Poison:.5,Insecte:.5,Normal:0}
-};
+// Sélection (max 2)
+let defenders = [];
 
-const types=Object.keys(chart);
-let type1=null, type2=null;
+function renderTypes() {
+    const container = document.getElementById("types");
+    container.innerHTML = "";
+    TYPES.forEach(t => {
+        const btn = document.createElement("button");
+        btn.className = "type-btn";
+        btn.textContent = t;
 
-function createGrid(id,isFirst){
-    const grid=document.getElementById(id);
-    types.forEach(t=>{
-        const btn=document.createElement("div");
-        btn.className="type-btn";
-        btn.style.background=typeColors[t];
-        btn.innerText=t;
-
-        btn.onclick=()=>{
-            if(isFirst){
-                if(type1===t){
-                    type1=null;
-                    btn.classList.remove("selected");
-                }else{
-                    type1=t;
-                    [...grid.children].forEach(b=>b.classList.remove("selected"));
-                    btn.classList.add("selected");
-                }
-            }else{
-                if(type2===t){
-                    type2=null;
-                    btn.classList.remove("selected");
-                }else{
-                    type2=t;
-                    [...grid.children].forEach(b=>b.classList.remove("selected"));
-                    btn.classList.add("selected");
-                }
+        btn.onclick = () => {
+            if (defenders.includes(t)) {
+                defenders = defenders.filter(x => x !== t);
+            } else {
+                if (defenders.length === 2) defenders.shift();
+                defenders.push(t);
             }
-            calculate();
+            update();
         };
-        grid.appendChild(btn);
+
+        if (defenders.includes(t)) btn.classList.add("active");
+
+        container.appendChild(btn);
     });
 }
 
-createGrid("grid1",true);
-createGrid("grid2",false);
-
-function tag(t){
-    return `<span class="type-tag" style="background:${typeColors[t]}">${t}</span>`;
+function multiplier(att, def) {
+    return (E[att] && E[att][def]) ?? 1;
 }
 
-function calculate(){
-    if(!type1){
-        document.getElementById("result").innerHTML="";
+function update() {
+    renderTypes();
+
+    const sel = document.getElementById("selection");
+
+    if (defenders.length === 0) {
+        sel.textContent = "Aucun type sélectionné.";
+        document.querySelectorAll(".zone").forEach(z => z.innerHTML = "");
         return;
     }
 
-    let mult={};
-    types.forEach(t=>mult[t]=1);
+    sel.textContent = "Défenseur(s) : " + defenders.join(" / ");
 
-    for(let a in chart[type1]) mult[a]*=chart[type1][a];
-    if(type2) for(let a in chart[type2]) mult[a]*=chart[type2][a];
+    const results = TYPES.map(att => {
+        let m = 1;
+        defenders.forEach(d => m *= multiplier(att, d));
+        return {att, m};
+    });
 
-    let x4=[],x2=[],x05=[],x0=[];
-    for(let a in mult){
-        if(mult[a]===4)x4.push(a);
-        else if(mult[a]===2)x2.push(a);
-        else if(mult[a]===.5)x05.push(a);
-        else if(mult[a]===0)x0.push(a);
-    }
+    const superEff = results.filter(r => r.m >= 2);
+    const weak = results.filter(r => r.m < 1 && r.m > 0);
+    const immune = results.filter(r => r.m === 0);
+    const neutral = results.filter(r => r.m === 1);
 
-    document.getElementById("result").innerHTML=`
-    <h2>${tag(type1)} ${type2?"+ "+tag(type2):""}</h2>
-
-    <div class="cat-title">🔥 Hyper efficace (x4)</div>
-    ${x4.length?x4.map(tag).join(""):"Aucun"}
-
-    <div class="cat-title">⚔️ Super efficace (x2)</div>
-    ${x2.length?x2.map(tag).join(""):"Aucun"}
-
-    <div class="cat-title">🛡️ Résiste (x0.5)</div>
-    ${x05.length?x05.map(tag).join(""):"Aucun"}
-
-    <div class="cat-title">❌ Immunisé (x0)</div>
-    ${x0.length?x0.map(tag).join(""):"Aucun"}
-    `;
+    fill("super", superEff, "good");
+    fill("weak", weak, "bad");
+    fill("immune", immune, "immune");
+    fill("neutral", neutral, "");
 }
 
-/* MODE SOMBRE */
-const btn=document.getElementById("darkToggle");
-let dark=localStorage.getItem("darkmode")==="true";
-function apply(){
-    document.body.classList.toggle("dark",dark);
-    btn.innerText=dark?"☀️ Mode clair":"🌙 Mode sombre";
+function fill(id, list, cls) {
+    const zone = document.getElementById(id);
+    zone.innerHTML = list.length
+        ? list.map(r => `<span class="badge ${cls}">${r.att} — x${r.m}</span>`).join("")
+        : "<i>Aucun</i>";
 }
-apply();
-btn.onclick=()=>{
-    dark=!dark;
-    localStorage.setItem("darkmode",dark);
-    apply();
-};
+
+renderTypes();
+update();
 </script>
 
 </body>
